@@ -1,0 +1,64 @@
+---
+title: "Untitled"
+format: html
+---
+
+# Carregamento de dados
+```{r setup, include=FALSE}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(tidyr)
+
+
+# Carregar o arquivo Excel (verifique se o arquivo tem a extensão correta, como .xlsx)
+df <- read_excel("G:/Meu Drive/Pericia Universitaria/Lucas formiga/Dados - Organizados 2019-2023 (RSU,  ÁGUA, ICMS e ISS).xlsx")
+
+# Filtrar apenas para o município "GARANHUNS"
+df_garanhuns <- df %>% filter(Município == "GARANHUNS")
+df_garanhuns <- df_garanhuns %>% select(-c(8, 9))
+
+# Verificar o resultado
+print(df_garanhuns)
+
+```
+
+
+ Calcular a média do ano do município
+```{r}
+medias_anuais <- df_garanhuns %>%
+  group_by(Ano, Município) %>%
+  summarise(
+    Media_Residuos = mean(`Resíduos (ton)`, na.rm = TRUE),
+    Media_Consumo_Agua = mean(`Consumo de Água (m³)`, na.rm = TRUE),
+    Media_ICMS = mean(`ICMS (R$)`, na.rm = TRUE),
+    Media_ISS = mean(`ISS (R$)`, na.rm = TRUE)
+  )
+
+# Exibir a tabela resultante
+print(medias_anuais)
+
+
+```
+
+
+
+```{r}
+
+# Transformar os dados para formato longo
+medias_longas <- medias_anuais %>%
+  pivot_longer(cols = starts_with("Media_"),
+               names_to = "Indicador",
+               values_to = "Valor")
+
+# Criar o gráfico de linha
+ggplot(medias_longas, aes(x = Ano, y = Valor, color = Indicador)) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(title = "Média Anual por Indicador",
+       x = "Ano",
+       y = "Valor",
+       color = "Indicador") +
+  theme_minimal()
+
+```
