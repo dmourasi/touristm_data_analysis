@@ -23,8 +23,7 @@ print(df_garanhuns)
 
 ```
 
-
- Calcular a média do ano do município
+# Calcular a média anual do município
 ```{r}
 medias_anuais <- df_garanhuns %>%
   group_by(Ano, Município) %>%
@@ -41,8 +40,7 @@ print(medias_anuais)
 
 ```
 
-
-
+# Grafico das média anual das variáveis unidas
 ```{r}
 
 # Transformar os dados para formato longo
@@ -62,3 +60,91 @@ ggplot(medias_longas, aes(x = Ano, y = Valor, color = Indicador)) +
   theme_minimal()
 
 ```
+
+# Grafico das média anual das variáveis unidas
+```{r}
+
+# Transformar os dados para formato longo
+medias_longas <- medias_anuais %>%
+  pivot_longer(cols = starts_with("Media_"),
+               names_to = "Indicador",
+               values_to = "Valor")
+
+# Criar o gráfico de linha
+ggplot(medias_longas, aes(x = Ano, y = Valor, color = Indicador)) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(title = "Média Anual por Indicador",
+       x = "Ano",
+       y = "Valor",
+       color = "Indicador") +
+  theme_minimal()
+
+```
+
+
+# Gráfico temporal dos anos de resíduos 
+```{r}
+
+# Criar o gráfico de linha
+ggplot(df_garanhuns, aes(x = Mês, y = `Resíduos (ton)`, group = Ano, color = as.factor(Ano))) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(x = "Mês",
+       y = "Resíduos (ton)",
+       color = "Ano") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+
+# Gráfico temporal dos anos de consumo de água
+```{r}
+
+# Criar o gráfico de linha
+ggplot(df_garanhuns, aes(x = Mês, y = `Consumo de Água (m³)`, group = Ano, color = as.factor(Ano))) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(x = "Mês",
+       y = "Consumo de Água (m³)",
+       color = "Ano") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+# Gráfico temporal dos anos de ICMS
+```{r}
+
+# Criar o gráfico de linha
+ggplot(df_garanhuns, aes(x = Mês, y = `ICMS (R$)`, group = Ano, color = as.factor(Ano))) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(x = "Mês",
+       y = "ICMS (R$)",
+       color = "Ano") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+
+# Gráfico temporal dos anos de ISS (R$)
+```{r}
+
+# Criar o gráfico de linha
+ggplot(df_garanhuns, aes(x = Mês, y = `ISS (R$)`, group = Ano, color = as.factor(Ano))) +
+  geom_line() +
+  geom_point() +  # Adiciona pontos nas linhas
+  labs(x = "Mês",
+       y = "ISS (R$)",
+       color = "Ano") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+
+# Análise de Mann-Kendall e Sen's slope
+```{r}
+tapply(df_garanhuns$`Resíduos (ton)`, df_garanhuns$Mês, mk.test)
+tapply(df_garanhuns$Volume, df_garanhuns$Mês, sens.slope)
+tapply(df_garanhuns$Volume, df_garanhuns$Mês, mmkh)
+
