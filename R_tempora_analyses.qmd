@@ -9,6 +9,9 @@ library(dplyr)
 library(readxl)
 library(ggplot2)
 library(tidyr)
+library(broom)
+library(modifiedmk)
+
 
 
 # Carregar o arquivo Excel (verifique se o arquivo tem a extensão correta, como .xlsx)
@@ -21,6 +24,21 @@ df_garanhuns <- df_garanhuns %>% select(-c(8, 9))
 # Verificar o resultado
 print(df_garanhuns)
 
+```
+
+
+# Calcular a soma total de cada variável
+```{r}
+somas_totais <- df_garanhuns %>%
+  summarise(
+    Total_Residuos = sum(`Resíduos (ton)`, na.rm = TRUE),
+    Total_Consumo_Agua = sum(`Consumo de Água (m³)`, na.rm = TRUE),
+    Total_ICMS = sum(`ICMS (R$)`, na.rm = TRUE),
+    Total_ISS = sum(`ISS (R$)`, na.rm = TRUE)
+  )
+
+# Exibir a tabela resultante
+print(somas_totais)
 ```
 
 # Calcular a média anual do município
@@ -37,8 +55,48 @@ medias_anuais <- df_garanhuns %>%
 # Exibir a tabela resultante
 print(medias_anuais)
 
+```
+
+# Calcular a mediana anual do município
+
+```{r}
+# Função para calcular a moda
+
+
+medianas_modas_anuais <- df_garanhuns %>%
+  group_by(Ano, Município) %>%
+  summarise(
+    Mediana_Residuos = median(`Resíduos (ton)`, na.rm = TRUE),
+    Mediana_Consumo_Agua = median(`Consumo de Água (m³)`, na.rm = TRUE),
+    Mediana_ICMS = median(`ICMS (R$)`, na.rm = TRUE),
+    Mediana_ISS = median(`ISS (R$)`, na.rm = TRUE),
+  )
+
+# Exibir a tabela resultante
+print(medianas_anuais)
+```
+
+# Calcular a moda anual do município
+
+```{r}
+mode_function <- function(x) {
+  ux <- unique(na.omit(x))  # Remove os valores NA antes de calcular
+  ux[which.max(tabulate(match(x, ux)))]
+}
+modas_anuais <- df_garanhuns %>%
+  group_by(Ano, Município) %>%
+  summarise(
+    Moda_Residuos = mode_function(`Resíduos (ton)`),
+    Moda_Consumo_Agua = mode_function(`Consumo de Água (m³)`),
+    Moda_ICMS = mode_function(`ICMS (R$)`),
+    Moda_ISS = mode_function(`ISS (R$)`)
+  )
+
+# Exibir a tabela resultante
+print(modas_anuais)
 
 ```
+
 
 # Grafico das média anual das variáveis unidas
 ```{r}
@@ -49,41 +107,98 @@ medias_longas <- medias_anuais %>%
                names_to = "Indicador",
                values_to = "Valor")
 
-# Criar o gráfico de linha
+# Criar gráficos separados para cada indicador sem legenda
 ggplot(medias_longas, aes(x = Ano, y = Valor, color = Indicador)) +
   geom_line() +
   geom_point() +  # Adiciona pontos nas linhas
   labs(title = "Média Anual por Indicador",
        x = "Ano",
-       y = "Valor",
-       color = "Indicador") +
-  theme_minimal()
+       y = "Valor") +
+  facet_wrap(~Indicador, scales = "free_y") +  # Cria gráficos separados por variável
+  theme_minimal() +
+  guides(color = "none")  # Remove a legenda
+
+
+```
+
+
+# Médias dos meses ao longo dos anos
+```{r}
+# Calcular a média dos indicadores agrupados por Mês e Município
+medias_mensais <- df_garanhuns %>%
+  group_by(Mês, Município) %>%
+  summarise(
+    Media_Residuos = mean(`Resíduos (ton)`, na.rm = TRUE),
+    Media_Consumo_Agua = mean(`Consumo de Água (m³)`, na.rm = TRUE),
+    Media_ICMS = mean(`ICMS (R$)`, na.rm = TRUE),
+    Media_ISS = mean(`ISS (R$)`, na.rm = TRUE)
+  )
+
+# Exibir a tabela resultante
+print(medias_mensais)
+```
+
+# Medianas dos meses ao longo dos anos
+```{r}
+# Calcular a mediana dos indicadores agrupados por Mês e Município
+medianas_mensais <- df_garanhuns %>%
+  group_by(Mês, Município) %>%
+  summarise(
+    Mediana_Residuos = median(`Resíduos (ton)`, na.rm = TRUE),
+    Mediana_Consumo_Agua = median(`Consumo de Água (m³)`, na.rm = TRUE),
+    Mediana_ICMS = median(`ICMS (R$)`, na.rm = TRUE),
+    Mediana_ISS = median(`ISS (R$)`, na.rm = TRUE)
+  )
+
+# Exibir a tabela resultante
+print(medianas_mensais)
+
+```
+
+# Moda dos meses ao longo dos anos
+
+```{r}
+
+# Calcular a moda dos indicadores agrupados por Mês e Município
+modas_mensais <- df_garanhuns %>%
+  group_by(Mês, Município) %>%
+  summarise(
+    Moda_Residuos = mode_function(`Resíduos (ton)`),
+    Moda_Consumo_Agua = mode_function(`Consumo de Água (m³)`),
+    Moda_ICMS = mode_function(`ICMS (R$)`),
+    Moda_ISS = mode_function(`ISS (R$)`)
+  )
+
+# Exibir a tabela resultante
+print(modas_mensais)
 
 ```
 
 # Grafico das média anual das variáveis unidas
 ```{r}
-
-# Transformar os dados para formato longo
-medias_longas <- medias_anuais %>%
-  pivot_longer(cols = starts_with("Media_"),
+# Transformar os dados para formato longo com meses
+medias_longas_mensais <- df_garanhuns %>%
+  pivot_longer(cols = c(`Resíduos (ton)`, `Consumo de Água (m³)`, `ICMS (R$)`, `ISS (R$)`),
                names_to = "Indicador",
                values_to = "Valor")
 
-# Criar o gráfico de linha
-ggplot(medias_longas, aes(x = Ano, y = Valor, color = Indicador)) +
-  geom_line() +
+# Criar gráficos separados para cada indicador sem legenda, mostrando variação mensal
+ggplot(medias_longas_mensais, aes(x = Mês, y = Valor, group = Ano)) +
+  geom_line(aes(color = as.factor(Ano))) +  # Linhas coloridas por ano
   geom_point() +  # Adiciona pontos nas linhas
-  labs(title = "Média Anual por Indicador",
-       x = "Ano",
+  labs(title = "Variação Mensal por Indicador ao Longo dos Anos",
+       x = "Mês",
        y = "Valor",
-       color = "Indicador") +
-  theme_minimal()
+       color= "ano") +
+  facet_wrap(~Indicador, scales = "free_y") +  # Cria gráficos separados por variável
+  theme_minimal() +
+  guides(color = FALSE) +  # Remove a legenda
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotaciona os nomes dos meses
 
 ```
 
 
-# Gráfico temporal dos anos de resíduos 
+# Gráfico temporal entre os anos de resíduos 
 ```{r}
 
 # Criar o gráfico de linha
@@ -94,7 +209,9 @@ ggplot(df_garanhuns, aes(x = Mês, y = `Resíduos (ton)`, group = Ano, color = a
        y = "Resíduos (ton)",
        color = "Ano") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 ```
 
 
@@ -141,10 +258,43 @@ ggplot(df_garanhuns, aes(x = Mês, y = `ISS (R$)`, group = Ano, color = as.facto
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 ```
 
+# Verificando normalidade
+```{r}
 
-# Análise de Mann-Kendall e Sen's slope
+shapiro.test(df_garanhuns$`Resíduos (ton)`)
+shapiro.test(df_garanhuns$`Consumo de Água (m³)`)
+shapiro.test(df_garanhuns$`ICMS (R$)`)
+shapiro.test(df_garanhuns$`ISS (R$)`)
+
+```
+
+
+# Análise mensal de Mann-Kendall e Sen's slope de resíduos
 ```{r}
 tapply(df_garanhuns$`Resíduos (ton)`, df_garanhuns$Mês, mk.test)
-tapply(df_garanhuns$Volume, df_garanhuns$Mês, sens.slope)
-tapply(df_garanhuns$Volume, df_garanhuns$Mês, mmkh)
+tapply(df_garanhuns$`Resíduos (ton)`, df_garanhuns$Mês, sens.slope)
+tapply(df_garanhuns$`Resíduos (ton)`, df_garanhuns$Mês, mmkh)
+```
+
+# Análise mensal de Mann-Kendall e Sen's slope de Consumo de Água
+```{r}
+tapply(df_garanhuns$`Consumo de Água (m³)`, df_garanhuns$Mês, mk.test)
+tapply(df_garanhuns$`Consumo de Água (m³)`, df_garanhuns$Mês, sens.slope)
+tapply(df_garanhuns$`Consumo de Água (m³)`, df_garanhuns$Mês, mmkh)
+```
+
+# Análise mensal de Mann-Kendall e Sen's slope de ICMS
+```{r}
+tapply(df_garanhuns$`ICMS (R$)`, df_garanhuns$Mês, mk.test)
+tapply(df_garanhuns$`ICMS (R$)`, df_garanhuns$Mês, sens.slope)
+tapply(df_garanhuns$`ICMS (R$)`, df_garanhuns$Mês, mmkh)
+```
+
+# Análise mensal de Mann-Kendall e Sen's slope de ISS
+```{r}
+tapply(df_garanhuns$`ISS (R$)`, df_garanhuns$Mês, mk.test)
+tapply(df_garanhuns$`ISS (R$)`, df_garanhuns$Mês, sens.slope)
+tapply(df_garanhuns$`ISS (R$)`, df_garanhuns$Mês, mmkh)
+```
+
 
